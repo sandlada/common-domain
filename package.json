@@ -1,0 +1,43 @@
+{
+  "name": "@sandlada/common-domain",
+  "version": "1.0.0",
+  "description": "Reusable domain-layer objects and value objects for hexagonal architecture projects",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsgo -p tsconfig.build.json",
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
+  "keywords": [
+    "domain",
+    "ddd",
+    "hexagonal",
+    "value-object",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sandlada/common-domain.git"
+  },
+  "devDependencies": {
+    "@sandlada/result": "^0.0.2-20260704.a",
+    "@typescript/native-preview": "^7.0.0-dev.20260707.2",
+    "vitest": "^4.1.10"
+  }
+}
