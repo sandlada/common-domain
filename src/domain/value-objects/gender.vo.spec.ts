@@ -35,7 +35,7 @@ describe('Gender', () => {
 
     describe('From', () => {
         it('should return Male for "male"', () => {
-            const result = Gender.From('male')
+            const result = Gender.From({ value: 'male', displayName: 'Male' })
             expect(result.isSuccess).toBe(true)
             if (result.isSuccess) {
                 expect(result.value).toBe(Gender.Male)
@@ -43,7 +43,7 @@ describe('Gender', () => {
         })
 
         it('should return Female for "female"', () => {
-            const result = Gender.From('female')
+            const result = Gender.From({ value: 'female', displayName: 'Female' })
             expect(result.isSuccess).toBe(true)
             if (result.isSuccess) {
                 expect(result.value).toBe(Gender.Female)
@@ -51,7 +51,7 @@ describe('Gender', () => {
         })
 
         it('should return Other for "other"', () => {
-            const result = Gender.From('other')
+            const result = Gender.From({ value: 'other', displayName: 'Other' })
             expect(result.isSuccess).toBe(true)
             if (result.isSuccess) {
                 expect(result.value).toBe(Gender.Other)
@@ -59,7 +59,7 @@ describe('Gender', () => {
         })
 
         it('should return Unknown for "unknown"', () => {
-            const result = Gender.From('unknown')
+            const result = Gender.From({ value: 'unknown', displayName: 'Unknown' })
             expect(result.isSuccess).toBe(true)
             if (result.isSuccess) {
                 expect(result.value).toBe(Gender.Unknown)
@@ -67,7 +67,7 @@ describe('Gender', () => {
         })
 
         it('should use reference equality for cached instances', () => {
-            const result = Gender.From('male')
+            const result = Gender.From({ value: 'male', displayName: 'Male' })
             expect(result.isSuccess).toBe(true)
             if (result.isSuccess) {
                 expect(result.value).toBe(Gender.Male)
@@ -76,7 +76,7 @@ describe('Gender', () => {
         })
 
         it('should return error for invalid value', () => {
-            const result = Gender.From('invalid')
+            const result = Gender.From({ value: 'invalid', displayName: 'Invalid' })
             expect(result.isFailure).toBe(true)
             if (result.isFailure) {
                 expect(result.error).toBeInstanceOf(GenderError)
@@ -85,7 +85,7 @@ describe('Gender', () => {
         })
 
         it('should return error for empty string', () => {
-            const result = Gender.From('')
+            const result = Gender.From({ value: '', displayName: '' })
             expect(result.isFailure).toBe(true)
             if (result.isFailure) {
                 expect(result.error).toBeInstanceOf(GenderError)
@@ -93,7 +93,7 @@ describe('Gender', () => {
         })
 
         it('should be case-sensitive', () => {
-            const result = Gender.From('MALE')
+            const result = Gender.From({ value: 'MALE', displayName: 'Male' })
             expect(result.isFailure).toBe(true)
         })
     })

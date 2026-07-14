@@ -26,17 +26,22 @@ export class Duration<T extends number | IDurationConstructorArgs | number[] = n
     /** @internal Phantom type to track construction args at the type level. */
     declare private readonly _brand: T
 
-    private readonly _totalSeconds: number
-    private readonly _totalMonths: number
+    public readonly totalSeconds: number
+    public readonly totalMonths: number
 
     /** A zero-length duration. */
-    public static readonly Zero: Duration = new Duration(0, 0)
-    public static readonly OneMinute: Duration = new Duration(1, 0)
+    public static readonly Zero: Duration = new Duration({})
+    public static readonly OneMinute: Duration = new Duration({ seconds: 1 })
 
-    private constructor(totalSeconds: number, totalMonths: number) {
+    private constructor(args: IDurationConstructorArgs) {
+        const {
+            seconds = 0, minutes = 0, hours = 0, days = 0, weeks = 0,
+            months = 0, quarters = 0, years = 0,
+        } = args
+
         // Normalize -0 to 0 for predictable equality checks
-        this._totalSeconds = totalSeconds || 0
-        this._totalMonths = totalMonths || 0
+        this.totalSeconds = (seconds + minutes * SecondsPerMinute + hours * SecondsPerHour + days * SecondsPerDay + weeks * SecondsPerWeek) || 0
+        this.totalMonths = (months + quarters * MonthsPerQuarter + years * MonthsPerYear) || 0
     }
 
     /** Creates a `Duration` from a single number representing seconds. */
@@ -60,7 +65,7 @@ export class Duration<T extends number | IDurationConstructorArgs | number[] = n
             if (!isValidNumeric(arg0)) {
                 return err(DurationError.InvalidValue(arg0, `Invalid seconds value: '${String(arg0)}'.`))
             }
-            return ok(new Duration(arg0, 0))
+            return ok(new Duration({ seconds: arg0 }))
         }
 
         // Positional: (hours, minutes, seconds) or (minutes, seconds)
@@ -95,31 +100,25 @@ export class Duration<T extends number | IDurationConstructorArgs | number[] = n
             }
         }
 
-        let seconds = 0
-        let minutes = 0
-        let hours = 0
-
         if (values.length === 1) {
             // [s]
-            seconds = values[0]!
-        } else if (values.length === 2) {
-            // [m, s]
-            minutes = values[0]!
-            seconds = values[1]!
-        } else if (values.length === 3) {
-            // [h, m, s]
-            hours = values[0]!
-            minutes = values[1]!
-            seconds = values[2]!
-        } else {
-            return err(DurationError.InvalidValue(
-                values,
-                'Duration array must have 1-3 elements.',
-            ))
+            return ok(new Duration({ seconds: values[0]! }))
         }
 
-        const totalSeconds = hours * SecondsPerHour + minutes * SecondsPerMinute + seconds
-        return ok(new Duration(totalSeconds, 0))
+        if (values.length === 2) {
+            // [m, s]
+            return ok(new Duration({ minutes: values[0]!, seconds: values[1]! }))
+        }
+
+        if (values.length === 3) {
+            // [h, m, s]
+            return ok(new Duration({ hours: values[0]!, minutes: values[1]!, seconds: values[2]! }))
+        }
+
+        return err(DurationError.InvalidValue(
+            values,
+            'Duration array must have 1-3 elements.',
+        ))
     }
 
     private static fromObject(args: IDurationConstructorArgs): IResultOfT<Duration, DurationError> {
@@ -146,39 +145,19 @@ export class Duration<T extends number | IDurationConstructorArgs | number[] = n
             }
         }
 
-        const totalSeconds =
-            seconds +
-            minutes * SecondsPerMinute +
-            hours * SecondsPerHour +
-            days * SecondsPerDay +
-            weeks * SecondsPerWeek
-
-        const totalMonths =
-            months +
-            quarters * MonthsPerQuarter +
-            years * MonthsPerYear
-
-        return ok(new Duration(totalSeconds, totalMonths))
+        return ok(new Duration(args))
     }
 
-    /** Total fixed-unit component in seconds (includes seconds, minutes, hours, days, weeks). */
-    public get totalSeconds(): number {
-        return this._totalSeconds
-    }
-
-    /** Total calendar-unit component in months (includes months, quarters, years). */
-    public get totalMonths(): number {
-        return this._totalMonths
-    }
+    // (totalSeconds and totalMonths are public readonly fields — see above)
 
     /** Whether this duration is zero-length. */
     public get isZero(): boolean {
-        return this._totalSeconds === 0 && this._totalMonths === 0
+        return this.totalSeconds === 0 && this.totalMonths === 0
     }
 
     /** Whether this duration is negative in either component. */
     public get isNegative(): boolean {
-        return this._totalSeconds < 0 || this._totalMonths < 0
+        return this.totalSeconds < 0 || this.totalMonths < 0
     }
 
     // ---- Arithmetic ----
@@ -188,27 +167,30 @@ export class Duration<T extends number | IDurationConstructorArgs | number[] = n
      * Fixed and calendar components are added independently.
      */
     public add(other: Duration<number>): Duration<number> {
-        return new Duration(
-            this._totalSeconds + other._totalSeconds,
-            this._totalMonths + other._totalMonths,
-        )
+        return new Duration({
+            seconds: this.totalSeconds + other.totalSeconds,
+            months: this.totalMonths + other.totalMonths,
+        })
     }
 
     /**
      * Returns a new `Duration` that is the difference of this and the other.
      */
     public subtract(other: Duration<number>): Duration<number> {
-        return new Duration(
-            this._totalSeconds - other._totalSeconds,
-            this._totalMonths - other._totalMonths,
-        )
+        return new Duration({
+            seconds: this.totalSeconds - other.totalSeconds,
+            months: this.totalMonths - other.totalMonths,
+        })
     }
 
     /**
      * Returns a new `Duration` with both components negated.
      */
     public negate(): Duration<number> {
-        return new Duration(-this._totalSeconds, -this._totalMonths)
+        return new Duration({
+            seconds: -this.totalSeconds,
+            months: -this.totalMonths,
+        })
     }
 
     // ---- Date operations ----
@@ -226,10 +208,10 @@ export class Duration<T extends number | IDurationConstructorArgs | number[] = n
         const result = new Date(date)
 
         // Step 1: Apply calendar months (with day clamping)
-        if (this._totalMonths !== 0) {
+        if (this.totalMonths !== 0) {
             const originalDay = result.getDate()
             let targetYear = result.getFullYear()
-            let targetMonth = result.getMonth() + this._totalMonths
+            let targetMonth = result.getMonth() + this.totalMonths
 
             targetYear += Math.floor(targetMonth / 12)
             targetMonth = ((targetMonth % 12) + 12) % 12
@@ -239,8 +221,8 @@ export class Duration<T extends number | IDurationConstructorArgs | number[] = n
         }
 
         // Step 2: Apply fixed seconds as milliseconds
-        if (this._totalSeconds !== 0) {
-            result.setTime(result.getTime() + this._totalSeconds * 1000)
+        if (this.totalSeconds !== 0) {
+            result.setTime(result.getTime() + this.totalSeconds * 1000)
         }
 
         return result
@@ -250,8 +232,8 @@ export class Duration<T extends number | IDurationConstructorArgs | number[] = n
 
     /** Value equality check on both fixed and calendar components. */
     public equals(other: Duration<number>): boolean {
-        return this._totalSeconds === other._totalSeconds
-            && this._totalMonths === other._totalMonths
+        return this.totalSeconds === other.totalSeconds
+            && this.totalMonths === other.totalMonths
     }
 
     /** Returns a human-readable string representation (e.g. `"2h 30m"`, `"-1mo 15s"`). */
@@ -261,7 +243,7 @@ export class Duration<T extends number | IDurationConstructorArgs | number[] = n
         const parts: string[] = []
 
         // Calendar components
-        let months = Math.abs(this._totalMonths)
+        let months = Math.abs(this.totalMonths)
         const years = Math.floor(months / MonthsPerYear)
         months = months % MonthsPerYear
 
@@ -269,7 +251,7 @@ export class Duration<T extends number | IDurationConstructorArgs | number[] = n
         if (months > 0) parts.push(`${months}mo`)
 
         // Fixed components
-        let remaining = Math.abs(this._totalSeconds)
+        let remaining = Math.abs(this.totalSeconds)
         const weeks = Math.floor(remaining / SecondsPerWeek)
         remaining = remaining % SecondsPerWeek
         const days = Math.floor(remaining / SecondsPerDay)
@@ -293,8 +275,8 @@ export class Duration<T extends number | IDurationConstructorArgs | number[] = n
     public toJSON(): IDurationConstructorArgs {
         const result: Record<string, number> = {}
 
-        let remainingMonths = this._totalMonths
-        let remainingSeconds = this._totalSeconds
+        let remainingMonths = this.totalMonths
+        let remainingSeconds = this.totalSeconds
 
         if (Math.abs(remainingMonths) >= MonthsPerYear) {
             const years = Math.trunc(remainingMonths / MonthsPerYear)

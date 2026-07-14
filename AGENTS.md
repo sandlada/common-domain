@@ -69,12 +69,12 @@ It does **not** provide:
 ```plaintext
 src/
 ├── domain/
-│   ├── aggregates/       # Domain entities / aggregates
+│   ├── aggregates/       # Domain entities / aggregates (+ *.aggregate.sql)
 │   ├── commons/          # Shared domain primitives
 │   ├── errors/           # Domain error classes with static error codes
 │   ├── primitives/       # Base types / interfaces
 │   ├── repositories/     # Repository interfaces (ports)
-│   └── value-objects/    # Immutable value objects
+│   └── value-objects/    # Immutable value objects (+ *.vo.sql)
 └── index.ts               # Barrel export (entry point)
 ```
 
@@ -144,6 +144,23 @@ enforced in the constructor.
 - Run `npm test` for watch mode during development, `npm run test:run` for CI.
 - Test files are excluded from production builds (e.g., via
   `tsconfig.build.json`).
+
+### MySQL DDL Convention
+
+Each domain value object and aggregate ships with a companion MySQL DDL file
+as a reference for projects consuming this library.
+
+- **File naming**: `xxx.vo.sql` for value objects, `xxx.aggregate.sql` for
+  aggregates (e.g., `gender.vo.sql`, `person.aggregate.sql`).
+- **Location**: alongside the corresponding `.vo.ts` or `.aggregate.ts` file.
+- **SQL style**: all lowercase — keywords in lowercase (`create table`,
+  `primary key`, `not null`), identifiers in `snake_case`.
+- **Content**: DDL only (`create table` statements). For enum-like
+  fixed-set value objects (e.g., `Gender`), reference values may be
+  documented as SQL comments.
+- **No barrel export**: SQL files are purely reference documentation and
+  are **not** exported from `src/index.ts`. They are excluded from the
+  TypeScript build automatically (non-`.ts` extension).
 
 ## Commands
 

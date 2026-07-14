@@ -1,6 +1,7 @@
 export { DomainError } from './domain/primitives/domain-error.js'
 export { GenderError } from './domain/errors/gender.error.js'
 export { Gender } from './domain/value-objects/gender.vo.js'
+export type { IGenderConstructorArgs } from './domain/value-objects/gender.vo.js'
 export { DurationError } from './domain/errors/duration.error.js'
 export { Duration } from './domain/value-objects/duration.vo.js'
 export type { IDurationConstructorArgs } from './domain/value-objects/duration.vo.js'

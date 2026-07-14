@@ -1,0 +1,30 @@
+-- ============================================================================
+-- duration — reference DDL for Duration value object
+--
+-- Duration is an embedded value object (not a standalone entity).
+-- Use these columns in any table that stores a Duration value.
+--
+-- reference: src/domain/value-objects/duration.vo.ts
+-- ============================================================================
+
+-- example usage in a host table:
+--
+-- create table if not exists `subscription` (
+--     `id`              binary(16)   not null primary key,
+--     `trial_duration_s`  bigint     not null  comment 'fixed-unit component in seconds',
+--     `trial_duration_m`  int        not null  comment 'calendar-unit component in months',
+-- );
+--
+-- -- create a view for convenience:
+-- create or replace view `subscription_with_duration` as
+-- select
+--     *,
+--     -- total fixed component
+--     `trial_duration_s` as `trial_duration_total_seconds`,
+--     -- total calendar component
+--     `trial_duration_m` as `trial_duration_total_months`
+-- from `subscription`;
+
+-- column reference:
+--   total_seconds  bigint   — fixed-unit component (seconds, minutes, hours, days, weeks)
+--   total_months   int      — calendar-unit component (months, quarters, years)

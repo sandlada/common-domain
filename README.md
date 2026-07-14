@@ -38,7 +38,7 @@ A fixed-set value object with four predefined instances: `Male`, `Female`,
 import { Gender, GenderError } from '@sandlada/common-domain'
 
 // Factory — returns ok(Gender) or err(GenderError)
-const result = Gender.From('male')
+const result = Gender.From({ value: 'male', displayName: 'Male' })
 if (result.isSuccess) {
   console.log(result.value.toString()) // "Male"
 }
@@ -54,7 +54,7 @@ for (const g of Gender.All) {
 }
 
 // Invalid input produces a domain error
-const invalid = Gender.From('invalid')
+const invalid = Gender.From({ value: 'invalid', displayName: 'Invalid' })
 if (invalid.isFailure) {
   console.log(invalid.error.code) // "InvalidValue"
 }
@@ -131,6 +131,26 @@ console.log(febDate.getDate())  // 29 (clamped to Feb 2024)
 | `Duration`      | Value Object | Time duration with fixed + calendar units                  |
 | `DurationError` | Domain Error | Error for invalid duration values                          |
 | `DomainError`   | Base Class   | Abstract base for all domain errors                        |
+
+---
+
+## MySQL DDL Reference
+
+Each domain object in this library ships with a companion DDL file as a
+quick-start reference for the table structure you need in your MySQL database.
+
+| File              | Domain Object | Description                            |
+| ----------------- | ------------- | -------------------------------------- |
+| `gender.vo.sql`   | `Gender`      | Lookup table for gender values         |
+| `duration.vo.sql` | `Duration`    | Reference columns for duration storage |
+
+These files contain lowercase-style `create table` statements with
+`snake_case` identifiers — ready to adapt into your project. They are
+**reference-only**: copy, modify, and integrate them into your own
+migrations as needed.
+
+See the [MySQL DDL Convention](AGENTS.md#mysql-ddl-convention) in
+`AGENTS.md` for the full naming and style guide.
 
 ---
 
