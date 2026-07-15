@@ -1,9 +1,12 @@
 {
   "name": "@sandlada/common-domain",
-  "version": "1.0.0",
+  "version": "0.0.1-20260714.a",
   "description": "Reusable domain-layer objects and value objects for hexagonal architecture projects",
   "type": "module",
   "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
